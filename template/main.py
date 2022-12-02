@@ -2,7 +2,8 @@ import sys
 from pyhelpers import Parser
 
 def make_data(input_file):
-    pass
+    with open(input_file, "r") as f:
+        pass
 
 if len(sys.argv) > 1:
     print("EXAMPLE\n")
