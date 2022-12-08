@@ -27,52 +27,86 @@ vis = [[0 if i != 0 and i != len(data[0])-1 else 1 for i in range(len(data[0]))]
 vis[0] = [1 for i in range(len(vis[0]))]
 vis[len(vis) - 1] = [1 for i in range(len(vis[0]))]
 
-def check_left(x, y):
-    if x == 0 or y == 0 or x == len(data[0]) - 1 or y == len(data) - 1:
-        return 1
+def get_score(x, y):
+    return check_left(x, y) * check_right(x, y) * check_up(x, y) * check_down(x, y)
+    # return check_up(x, y)
 
-    for i in range(0, x):
-        if data[y][i] >= data[y][x]:
-            return 0
-    return 1
+def check_left(x, y):
+    dist = 0
+
+    if x == 0 or y == 0 or x == len(data[0]) - 1 or y == len(data) - 1:
+        return dist
+
+    for i in range(x-1, -1, -1):
+        if data[y][i] < data[y][x]:
+            dist += 1
+        else:
+            dist += 1
+            break
+    return dist
 
 def check_right(x, y):
+    dist = 0
+
     if x == 0 or y == 0 or x == len(data[0]) - 1 or y == len(data) - 1:
-        return 1
+        return dist
 
     for i in range(x+1, len(data[0])):
-        if data[y][i] >= data[y][x]:
-            return 0
-    return 1
+        if data[y][i] < data[y][x]:
+            dist += 1
+        else:
+            dist += 1
+            break
+    return dist
 
 def check_up(x, y):
-    if x == 0 or y == 0 or x == len(data[0]) - 1 or y == len(data) - 1:
-        return 1
+    dist = 0
 
-    for i in range(0, y):
-        if data[i][x] >= data[y][x]:
-            return 0
-    return 1
+    if x == 0 or y == 0 or x == len(data[0]) - 1 or y == len(data) - 1:
+        return dist
+
+    for i in range(y-1, -1, -1):
+        if data[i][x] < data[y][x]:
+            dist += 1
+        else:
+            dist += 1
+            break
+    return dist
 
 def check_down(x, y):
+    dist = 0
+
     if x == 0 or y == 0 or x == len(data[0]) - 1 or y == len(data) - 1:
-        return 1
+        return dist
 
     for i in range(y+1, len(data)):
-        if data[i][x] >= data[y][x]:
-            return 0
-    return 1
+        if data[i][x] < data[y][x]:
+            dist += 1
+        else:
+            dist += 1
+            break
+    return dist
 
+print(get_score(2, 3))
+
+m = 0
 for yi in range(0, len(data)):
-    y = data[yi]
+    for xi in range(0, len(data[0])):
+        s = get_score(xi, yi)
+        if s > m:
+            m = s
+print(m)
 
-    for xi in range(0, len(y)):
-        x = y[xi]
-        left = check_left(xi, yi)
-        right = check_right(xi, yi)
-        up = check_up(xi, yi)
-        down = check_down(xi, yi)
-        vis[yi][xi] = left or right or up or down
+# for yi in range(0, len(data)):
+#     y = data[yi]
+#
+#     for xi in range(0, len(y)):
+#         x = y[xi]
+#         left = check_left(xi, yi)
+#         right = check_right(xi, yi)
+#         up = check_up(xi, yi)
+#         down = check_down(xi, yi)
+#         vis[yi][xi] = left or right or up or down
 
 # for yi in range(1, len(data)-1):
 #     y = data[yi]
@@ -105,5 +139,5 @@ for yi in range(0, len(data)):
     #             break
 
 
-grid = Grid.from_2d_list(vis)
-print(grid.count(1))
+# grid = Grid.from_2d_list(vis)
+# print(grid.count(1))
