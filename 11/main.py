@@ -12,11 +12,11 @@ class Monkey:
         self.test_false = -1
         self.n_inspects = 0
 
-    def action(self, monkeys):
+    def action(self, monkeys, com):
         for item in self.items:
             old = item
             worry = eval(self.operation)
-            worry = int(worry / 3)
+            worry %= com
             if worry % self.test == 0:
                 monkeys[self.test_true].items.append(worry)
                 # print("Worry", worry, "thrown to", self.test_true)
@@ -27,8 +27,7 @@ class Monkey:
         self.items = []
 
     def __repr__(self):
-        # return str(self.items) + " " + self.operation + " " + str(self.test) + " " + str(self.test_true) + " " + str(self.test_false)
-        return str(self.items)
+        return str(self.items) + " " + self.operation + " " + str(self.test) + " " + str(self.test_true) + " " + str(self.test_false)
 
 def make_data(input_file):
     monkeys = []
@@ -63,9 +62,13 @@ else:
 
 # -----------------
 
-for _ in range(20):
+com = 1
+for monkey in data:
+    com *= monkey.test
+
+for r in range(10000):
     for monkey in data:
-        monkey.action(data)
+        monkey.action(data, com)
 
 res = []
 for monkey in data:
