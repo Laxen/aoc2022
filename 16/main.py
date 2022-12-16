@@ -5,28 +5,37 @@ from copy import deepcopy
 from time import sleep
 
 class State:
-    def __init__(self, current_valve, time, opened_valves, data):
+    def __init__(self, current_valve, elephant_valve, time, opened_valves, data):
         self.current_valve = current_valve
-        self.time = time
+        self.elephant_valve = elephant_valve
         self.opened_valves = opened_valves
         self.pressure = 0
 
-    def is_open(self):
+    def is_human_open(self):
         return self.current_valve in self.opened_valves
+
+    def is_elephant_open(self):
+        return self.elephant_valve in self.opened_valves
 
     def step(self):
         for valve in self.opened_valves:
             self.pressure += data[valve][0]
-        self.time += 1
+
+    @property
+    def name(self):
+        names = [self.current_valve, self.elephant_valve]
+        return "".join(sorted(names))
 
     def __eq__(self, other):
-        return self.current_valve == other.current_valve and self.time == other.time and self.opened_valves == other.opened_valves
+        return (self.current_valve == other.current_valve or self.current_valve == other.elephant_valve) and \
+               (self.elephant_valve == other.elephant_valve or self.elephant_valve == other.current_valve) and \
+               sorted(self.opened_valves) == sorted(other.opened_valves)
 
     def __hash__(self):
-        return hash((self.current_valve, self.time, tuple(self.opened_valves)))
+        return hash((tuple(sorted((self.current_valve, self.elephant_valve))), tuple(sorted(self.opened_valves))))
 
     def __repr__(self):
-        return f"State({self.current_valve}, {self.time}, {self.opened_valves}, {self.pressure})"
+        return f"State({self.current_valve}, {self.elephant_valve}, {self.opened_valves}, {self.pressure})"
 
 def make_data(input_file):
     data = dict()
@@ -45,65 +54,113 @@ else:
 
 # -----------------
 
-# def shortest_path(start, end, data):
-#     if start == end:
-#         return 1
-#
-#     shortest = 99
-#     for next_valve in data[start][1]:
-#         s = shortest_path(next_valve, end, data)
-#         shortest = min(shortest, s)
-#
-#
-# def simulate(state):
-
-
 def next_states(state, data):
     next_states = []
 
-    # If the valve is not open and there's a point in opening it, then open it
-    if not state.is_open() and data[state.current_valve][0] > 0:
-        next_state = deepcopy(state)
-        next_state.step()
-        next_state.opened_valves.append(state.current_valve)
-        # next_state.time += 1
-        next_states.append(next_state)
+    # Human opens
+    if not state.is_human_open() and data[state.current_valve][0] > 0:
+        # Elephant opens
+        if not state.is_elephant_open() and data[state.elephant_valve][0] > 0 and state.elephant_valve != state.current_valve:
+            next_state = deepcopy(state)
+            next_state.step()
+            next_state.opened_valves.append(state.current_valve)
+            next_state.opened_valves.append(state.elephant_valve)
+            next_states.append(next_state)
 
+        # Elephant moves
+        for next_elephant_valve in data[state.elephant_valve][1]:
+            next_state = deepcopy(state)
+            next_state.step()
+            next_state.opened_valves.append(state.current_valve)
+            next_state.elephant_valve = next_elephant_valve
+            next_states.append(next_state)
+
+    # Human moves
     for next_valve in data[state.current_valve][1]:
-        next_state = deepcopy(state)
-        next_state.current_valve = next_valve
-        next_state.step()
-        # next_state.time += 1
-        next_states.append(next_state)
+        # Elephant opens
+        if not state.is_elephant_open() and data[state.elephant_valve][0] > 0:
+            next_state = deepcopy(state)
+            next_state.step()
+            next_state.current_valve = next_valve
+            next_state.opened_valves.append(state.elephant_valve)
+            next_states.append(next_state)
+
+        # Elephant moves
+        for next_elephant_valve in data[state.elephant_valve][1]:
+            next_state = deepcopy(state)
+            next_state.step()
+            next_state.current_valve = next_valve
+            next_state.elephant_valve = next_elephant_valve
+            next_states.append(next_state)
 
     return next_states
 
+def debug(*string):
+    # print(*string)
+    pass
+
 pp(data)
 
-init = State("AA", 0, [], data)
+init = State("AA", "AA", 0, [], data)
 
-states = set()
-new_states = set()
+states = list()
+new_states = dict()
 
-states.add(init)
+care_states = dict()
+best_states = dict()
 
-for i in range(30):
-    print(i, len(states))
-    for state in states:
-        # print(state, "-------")
-
-        ns = next_states(state, data)
-        new_states.update(ns)
-        # for s in ns:
-        #     new_states.add(s)
-
-    # print(new_states)
-    # print("----------------------------")
-    states = new_states
-    new_states = set()
-    # sleep(1)
+states.append(init)
 
 max_pressure = 0
+
+for i in range(26):
+    print(i, len(states))
+    for state in states:
+        ns = next_states(state, data)
+        for n in ns:
+            debug("Looking at", n)
+            if n in care_states:
+                if care_states[n] >= n.pressure:
+                    debug("    Better state already exists, discarding")
+                    continue
+                # debug(n, "improved", care_states[n])
+                care_states[n] = n.pressure
+            else:
+                # debug(n, "New state found, keeping")
+                care_states[n] = n.pressure
+
+            if i >= 10:
+                if len(n.opened_valves) < 4 or n.pressure < max_pressure * 0.9:
+                    continue
+
+            if n.name in best_states:
+                best_state = best_states[n.name]
+                # If best state has all open valves that new state has, and has higher pressure, discard new state
+                if set(best_state.opened_valves).issuperset(set(n.opened_valves)) and best_state.pressure >= n.pressure:
+                    debug("    Best state is better", best_state)
+                    continue
+                # If new state has all open valves that best state has, and has higher pressure, replace it
+                elif set(n.opened_valves).issuperset(set(best_state.opened_valves)) and n.pressure >= best_state.pressure:
+                    debug("    This is the best state!")
+                    best_states[n.name] = n
+            else:
+                debug("    No best state, adding")
+                best_states[n.name] = n
+            debug("    Adding", n)
+            new_states[n] = n
+
+    states = list(new_states.values())
+    new_states = dict()
+    # pp(states)
+    debug("----------------------------")
+
+    for state in states:
+        max_pressure = max(max_pressure, state.pressure)
+    print(max_pressure)
+    # sleep(1)
+
+print("DONE")
+
 for state in states:
     max_pressure = max(max_pressure, state.pressure)
 print(max_pressure)
