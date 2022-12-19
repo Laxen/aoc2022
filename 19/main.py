@@ -107,6 +107,9 @@ else:
 
 quality_levels = []
 for bp in data:
+    if bp.bid > 3:
+        continue
+
     print("Blueprint", bp.bid, "-------")
 
     init = State(1, 0, 0, 0, 1, 0, 0, 0, bp)
@@ -118,7 +121,7 @@ for bp in data:
     best = dict()
 
     max_geode = 0
-    for i in range(24):
+    for i in range(32):
         print("Step", i, "(", len(states), ")")
 
         new_states = []
@@ -133,11 +136,11 @@ for bp in data:
                     continue
             best[state.robot_hash()] = state
 
-            # No point in hoarding this since it's better to spend
-            # if state.ore > 4 and state.clay > 20:
-            #     continue
-
-            if i >= 20 and state.geode < max_geode * 0.5:
+            if i >= 20 and state.geode < max_geode * 0.6:
+                continue
+            if i >= 25 and state.geode < max_geode * 0.8:
+                continue
+            if i >= 28 and state.geode < max_geode * 0.9:
                 continue
 
             # print(state)
