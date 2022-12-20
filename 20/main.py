@@ -28,17 +28,21 @@ else:
 
 order = data.copy()
 
-for n in order:
-    i = data.index(n)
-    # print(i, n)
-    data.remove(n)
+for n in data:
+    n.value *= 811589153
 
-    new_i = (i + n.value)%len(data)
-    if new_i == 0:
-        new_i = len(data)
+for _ in range(10):
+    for n in order:
+        i = data.index(n)
+        # print(i, n)
+        data.remove(n)
 
-    data.insert(new_i, n)
-    # print(data)
+        new_i = (i + n.value)%len(data)
+        if new_i == 0 and n.value != 0:
+            new_i = len(data)
+
+        data.insert(new_i, n)
+print(data)
 
 i_zero = 0
 for i, n in enumerate(data):
