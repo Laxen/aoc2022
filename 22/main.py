@@ -27,7 +27,7 @@ else:
 
 def get_move_command(path, current_direction):
     steps = ""
-    new_direction = -1
+    turn = None
 
     for i, c in enumerate(path):
         if c.isdigit():
@@ -35,34 +35,284 @@ def get_move_command(path, current_direction):
         else:
             match c:
                 case "R":
-                    new_direction = (current_direction + 1) % 4
+                    turn = 1
                 case "L":
-                    new_direction = (current_direction - 1) % 4
+                    turn = -1
 
             path = path[i+1:]
-            return path, int(steps), new_direction
-    return "", int(steps), new_direction
+            return path, int(steps), turn
+    return "", int(steps), turn
 
-def get_loop_coord(pos, direction):
+def get_loop_coord(pos, direction, face):
     match direction:
-        case 0:
-            for x in range(pos.x):
-                if data[x, pos.y] == "." or data[x, pos.y] == "#":
-                    return Coord(x, pos.y)
-        case 1:
-            for y in range(pos.y):
-                if data[pos.x, y] == "." or data[pos.x, y] == "#":
-                    return Coord(pos.x, y)
-        case 2:
-            for x in range(data.width, pos.x, -1):
-                if data[x, pos.y] == "." or data[x, pos.y] == "#":
-                    return Coord(x, pos.y)
-        case 3:
-            for y in range(data.height, pos.y, -1):
-                if data[pos.x, y] == "." or data[pos.x, y] == "#":
-                    return Coord(pos.x, y)
+        case 0: # Right
+            match face:
+                case 1:
+                    face = 2
+                    direction = 0 # Right
+                    pos.x = 0
+                    pos.y = pos.y
+                case 2:
+                    face = 5
+                    direction = 2 # Left
+                    pos.x = side_length - 1
+                    pos.y = side_length - 1 - pos.y
+                case 3:
+                    face = 2
+                    direction = 3 # Up
+                    pos.x = pos.y
+                    pos.y = side_length - 1
+                case 4:
+                    face = 5
+                    direction = 0 # Right
+                    pos.x = 0
+                    pos.y = pos.y
+                case 5:
+                    face = 2
+                    direction = 2 # Left
+                    pos.x = side_length - 1
+                    pos.y = side_length - 1 - pos.y
+                case 6:
+                    face = 5
+                    direction = 3 # Up
+                    pos.x = pos.y
+                    pos.y = side_length - 1
+        case 1: # Down
+            match face:
+                case 1:
+                    face = 3
+                    direction = 1 # Down
+                    pos.x = pos.x
+                    pos.y = 0
+                case 2:
+                    face = 3
+                    direction = 2 # Left
+                    pos.y = pos.x
+                    pos.x = side_length - 1
+                case 3:
+                    face = 5
+                    direction = 1 # Down
+                    pos.x = pos.x
+                    pos.y = 0
+                case 4:
+                    face = 6
+                    direction = 1 # Down
+                    pos.x = pos.x
+                    pos.y = 0
+                case 5:
+                    face = 6
+                    direction = 2 # Left
+                    pos.y = pos.x
+                    pos.x = side_length - 1
+                case 6:
+                    face = 2
+                    direction = 1 # Down
+                    pos.x = pos.x
+                    pos.y = 0
+        case 2: # Left
+            match face:
+                case 1:
+                    face = 4
+                    direction = 0 # Right
+                    pos.x = 0
+                    pos.y = side_length - 1 - pos.y
+                case 2:
+                    face = 1
+                    direction = 2 # Left
+                    pos.x = side_length - 1
+                    pos.y = pos.y
+                case 3:
+                    face = 4
+                    direction = 1 # Down
+                    pos.x = pos.y
+                    pos.y = 0
+                case 4:
+                    face = 1
+                    direction = 0 # Right
+                    pos.x = 0
+                    pos.y = side_length - 1 - pos.y
+                case 5:
+                    face = 4
+                    direction = 2 # Left
+                    pos.x = side_length - 1
+                    pos.y = pos.y
+                case 6:
+                    face = 1
+                    direction = 1 # Down
+                    pos.x = pos.y
+                    pos.y = 0
+        case 3: # Up
+            match face:
+                case 1:
+                    face = 6
+                    direction = 0 # Right
+                    pos.y = pos.x
+                    pos.x = 0
+                case 2:
+                    face = 6
+                    direction = 3 # Up
+                    pos.x = pos.x
+                    pos.y = side_length - 1
+                case 3:
+                    face = 1
+                    direction = 3 # Up
+                    pos.x = pos.x
+                    pos.y = side_length - 1
+                case 4:
+                    face = 3
+                    direction = 0 # Right
+                    pos.y = pos.x
+                    pos.x = 0
+                case 5:
+                    face = 3
+                    direction = 3 # Up
+                    pos.x = pos.x
+                    pos.y = side_length - 1
+                case 6:
+                    face = 4
+                    direction = 3 # Up
+                    pos.x = pos.x
+                    pos.y = side_length - 1
+
+    print("Moving to face", face, "at", pos, "direction", direction)
+    return pos, direction, face
+
+def get_loop_coord_ex(pos, direction, face):
+    match direction:
+        case 0: # Right
+            match face:
+                case 1:
+                    face = 6
+                    direction = 2 # Left
+                    pos.x = side_length - 1
+                    pos.y = side_length - 1 - pos.y
+                case 2:
+                    face = 3
+                    direction = 0 # Right
+                    pos.x = 0
+                    pos.y = pos.y
+                case 3:
+                    face = 4
+                    direction = 0 # Right
+                    pos.x = 0
+                    pos.y = pos.y
+                case 4:
+                    face = 6
+                    direction = 1 # Down
+                    pos.x = side_length - 1 - pos.y
+                    pos.y = 0
+                case 5:
+                    face = 6
+                    direction = 0 # Right
+                    pos.x = 0
+                    pos.y = pos.y
+                case 6:
+                    face = 1
+                    direction = 2 # Left
+                    pos.x = side_length - 1
+                    pos.y = side_length - 1 - pos.y
+        case 1: # Down
+            match face:
+                case 1:
+                    face = 4
+                    direction = 1 # Down
+                    pos.x = pos.x
+                    pos.y = 0
+                case 2:
+                    face = 5
+                    direction = 3 # Up
+                    pos.x = side_length - 1 - pos.x
+                    pos.y = side_length - 1
+                case 3:
+                    face = 5
+                    direction = 0 # Right
+                    pos.y = side_length - 1 - pos.x
+                    pos.x = 0
+                case 4:
+                    face = 5
+                    direction = 1 # Down
+                    pos.x = pos.x
+                    pos.y = 0
+                case 5:
+                    face = 2
+                    direction = 3 # Up
+                    pos.x = side_length - 1 - pos.x
+                    pos.y = side_length - 1
+                case 6:
+                    face = 2
+                    direction = 0 # Right
+                    pos.y = side_length - 1 - pos.x
+                    pos.x = 0
+        case 2: # Left
+            match face:
+                case 1:
+                    face = 3
+                    direction = 1 # Down
+                    pos.x = pos.y
+                    pos.y = 0
+                case 2:
+                    face = 6
+                    direction = 3 # Up
+                    pos.x = pos.y
+                    pos.y = side_length - 1
+                case 3:
+                    face = 2
+                    direction = 2 # Left
+                    pos.x = side_length - 1
+                    pos.y = pos.y
+                case 4:
+                    face = 3
+                    direction = 2 # Left
+                    pos.x = side_length - 1
+                    pos.y = pos.y
+                case 5:
+                    face = 3
+                    direction = 3 # Up
+                    pos.x = side_length - 1 - pos.y
+                    pos.y = side_length - 1
+                case 6:
+                    face = 5
+                    direction = 2 # Left
+                    pos.x = side_length - 1
+                    pos.y = pos.y
+        case 3: # Up
+            match face:
+                case 1:
+                    face = 2
+                    direction = 1 # Down
+                    pos.x = side_length - 1 - pos.x
+                    pos.y = 0
+                case 2:
+                    face = 1
+                    direction = 1 # Down
+                    pos.x = side_length - 1 - pos.x
+                    pos.y = 0
+                case 3:
+                    face = 1
+                    direction = 0 # Right
+                    pos.y = pos.x
+                    pos.x = 0
+                case 4:
+                    face = 1
+                    direction = 3 # Up
+                    pos.x = pos.x
+                    pos.y = side_length - 1
+                case 5:
+                    face = 4
+                    direction = 3 # Up
+                    pos.x = pos.x
+                    pos.y = side_length - 1
+                case 6:
+                    face = 4
+                    direction = 2 # Left
+                    pos.y = side_length - 1 - pos.x
+                    pos.x = side_length - 1
+
+    print("Moving to face", face, "at", pos, "direction", direction)
+    return pos, direction, face
 
 
+# path = "0L1"
 # path = "10R5L5R10L4R5L5"
 path = "47L2R45L20L16L2R33L27R32L12R50L13R23R27L32L27R2R16" \
        "R36L22L13R17L41R5L11R28R4R9R28R44L31L49R31L29R10L4" \
@@ -178,58 +428,99 @@ path = "47L2R45L20L16L2R33L27R32L12R50L13R23R27L32L27R2R16" \
        "L47L25R49L23R50R36R45R11L9L47L36R37R21R36L31L40R33" \
        "R29L15L25R25L9L5R22L50R16L17L32L32L16L8R5R7R38L37"
 
-pos = Coord(0, 0)
-for c, e in data:
-    if e == ".":
-        pos = Coord(c[0], c[1])
-        break
+# pos = Coord(0, 0)
+# for c, e in data:
+#     if e == ".":
+#         pos = Coord(c[0], c[1])
+#         break
 
 # 0 = right
 # 1 = down
 # 2 = left
 # 3 = up
 direction = 0
+face = 1
+pos = Coord(0, 0)
 
-print(data)
+# EXAMPLE
+# side_length = 4
+# faces = dict()
+# faces[1] = data[2*side_length:, :side_length]
+# faces[2] = data[:side_length, side_length:2*side_length]
+# faces[3] = data[side_length:2*side_length, side_length:2*side_length]
+# faces[4] = data[2*side_length:3*side_length, side_length:2*side_length]
+# faces[5] = data[2*side_length:3*side_length, 2*side_length:3*side_length]
+# faces[6] = data[3*side_length:4*side_length, 2*side_length:3*side_length]
+
+# REAL
+side_length = 50
+faces = dict()
+faces[1] = data[side_length:2*side_length, :side_length]
+faces[2] = data[2*side_length:, :side_length]
+faces[3] = data[side_length:2*side_length, side_length:2*side_length]
+faces[4] = data[:side_length, 2*side_length:3*side_length]
+faces[5] = data[side_length:2*side_length, 2*side_length:3*side_length]
+faces[6] = data[:side_length, 3*side_length:]
+
+for side, grid in faces.items():
+    print(side)
+    print(grid)
+
+# exit()
+
+print(pos)
+faces[face][pos] = "X"
+print(faces[face])
+faces[face][pos] = "."
 
 while len(path) > 0:
-    path, steps, new_direction = get_move_command(path, direction)
-    print("Move", steps, direction)
+    path, steps, turn = get_move_command(path, direction)
+    print("Move", steps, "in direction", direction, "on face", face)
 
     for s in range(steps):
         newpos = deepcopy(pos)
+        newdir = direction
+        newface = face
 
         if direction == 0:
             newpos.x += 1
-            if newpos.x > data.height or data[newpos] == " ":
-                newpos = get_loop_coord(pos, direction)
+            if newpos.x > side_length - 1:
+                newpos, newdir, newface = get_loop_coord(newpos, direction, face)
         elif direction == 1:
             newpos.y += 1
-            if newpos.y > data.height or data[newpos] == " ":
-                newpos = get_loop_coord(pos, direction)
+            if newpos.y > side_length - 1:
+                newpos, newdir, newface = get_loop_coord(newpos, direction, face)
         elif direction == 2:
             newpos.x -= 1
-            if newpos.x < 0 or data[newpos] == " ":
-                newpos = get_loop_coord(pos, direction)
+            if newpos.x < 0:
+                newpos, newdir, newface = get_loop_coord(newpos, direction, face)
         elif direction == 3:
             newpos.y -= 1
-            if newpos.y < 0 or data[newpos] == " ":
-                newpos = get_loop_coord(pos, direction)
+            if newpos.y < 0:
+                newpos, newdir, newface = get_loop_coord(newpos, direction, face)
 
-        if data[newpos] == "#":
+        # Revert all movement
+        if faces[newface][newpos] == "#":
             newpos = pos
+            newdir = direction
+            newface = face
 
         pos = newpos
+        direction = newdir
+        face = newface
 
-    if new_direction != -1:
-        direction = new_direction
 
-    # print(pos)
-    data[pos] = "X"
-    # print(data)
-    data[pos] = "."
+    if turn is not None:
+        direction = (direction + turn) % 4
 
-row = pos.y + 1
-col = pos.x + 1
-print(row, col, direction)
-print(1000*row + 4*col + direction)
+    # print("Face", face, "-", pos)
+    # faces[face][pos] = "X"
+    # print(faces[face])
+    # faces[face][pos] = "."
+
+# row = pos.y + 1
+# col = pos.x + 1
+# print(row, col, direction)
+# print(1000*row + 4*col + direction)
+
+print("Face", face, "-", pos, "direction", direction)
